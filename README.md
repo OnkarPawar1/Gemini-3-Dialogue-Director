@@ -63,3 +63,37 @@ Notes:
 - Notes & recommendations:
 	- Using CDN-hosted modules (importmap + esm.sh) is convenient for prototypes and demo builds, but for production you may prefer bundling dependencies (Vite build) to reduce runtime CDN reliance and improve cacheability.
 	- Ensure the hosting environment serves `index.html` and the static assets (`index.tsx`, `index.css`) correctly; Vite's dev server does this automatically during `npm run dev`.
+
+---
+
+## Favicon (Tab Logo)
+
+The website includes a favicon that displays in the browser tab when you visit the site. The favicon is an SVG file located at `public/favicon.svg`.
+
+### Steps to customize the favicon:
+
+1. **Replace the favicon file:**
+   - Navigate to `public/favicon.svg`
+   - Replace it with your own SVG icon (or PNG/ICO file)
+
+2. **Update the favicon reference in `index.html`:**
+   - The favicon link is in the `<head>` section:
+     ```html
+     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+     ```
+   - Change the `href` if you use a different filename or format
+
+3. **Supported formats:**
+   - **SVG** (recommended): Modern, scalable, lightweight
+   - **PNG**: Raster format, ensure 32x32 or 64x64 pixels minimum
+   - **ICO**: Traditional favicon format
+
+4. **For different sizes/formats:**
+   - Add multiple favicon declarations for broader browser support:
+     ```html
+     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+     ```
+
+5. **Clear browser cache:**
+   - Hard refresh (Ctrl+Shift+R on Windows/Linux or Cmd+Shift+R on Mac) to see changes immediately

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="#4f46e5"/>
+  
+  <!-- Gemini symbol - double circles/infinity-like shape -->
+  <circle cx="22" cy="32" r="8" fill="none" stroke="white" stroke-width="2"/>
+  <circle cx="42" cy="32" r="8" fill="none" stroke="white" stroke-width="2"/>
+  
+  <!-- Center connecting line -->
+  <line x1="30" y1="32" x2="34" y2="32" stroke="white" stroke-width="2"/>
+  
+  <!-- Highlight circle -->
+  <circle cx="32" cy="32" r="32" fill="none" stroke="white" stroke-width="1" opacity="0.3"/>
+</svg>
