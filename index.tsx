@@ -4,9 +4,16 @@ import { GoogleGenAI } from "@google/genai";
 
 // --- Configuration ---
 const LOCATION = "us-central1";
-const GITHUB_REPO = "OnkarPawar1/AI-Gen-Video-Generator";
-const GITHUB_BRANCH = "main";
-const GITHUB_CONTENTS_BASE = `https://api.github.com/repos/${GITHUB_REPO}/contents`;
+
+// --- Local Asset Configuration ---
+const LOCAL_VIDEO_ASSETS_PATH = '/Gemini-3-Dialogue-Director/video-assets';
+const LOCAL_IMAGE_ASSETS_PATH = '/Gemini-3-Dialogue-Director/image-assets';
+
+// Predefined list of local video assets (man and woman)
+const LOCAL_ASSETS = {
+    man: Array.from({ length: 19 }, (_, i) => ({ number: i + 1, name: `man${i + 1}` })).filter(a => a.number !== 4 || true), // man1-3, 5-19 available
+    woman: Array.from({ length: 20 }, (_, i) => ({ number: i + 1, name: `woman${i + 1}` })) // woman1-20 available
+};
 
 // Unique names for the built-in actors (Expanded to 19)
 const manNames = ["David", "Ethan", "Andre", "Lucas", "Marco", "James", "Omar", "Leo", "Richard", "Kai", "Samuel", "Daniel", "Chris", "Alex", "Jordan", "Ryan", "Ben", "Noah", "Elijah"];
@@ -284,18 +291,25 @@ const CredentialsModal: React.FC<{
     isLoading: boolean;
     projectId: string;
     setProjectId: (id: string) => void;
+    genAiApiKey: string;
+    setGenAiApiKey: (key: string) => void;
     ttsApiKey: string;
     setTtsApiKey: (key: string) => void;
     vertexAccessToken: string;
     setVertexAccessToken: (token: string) => void;
     fillDefaultCredentials: () => void;
-}> = ({ isOpen, onClose, isLoading, projectId, setProjectId, ttsApiKey, setTtsApiKey, vertexAccessToken, setVertexAccessToken, fillDefaultCredentials }) => {
+}> = ({ isOpen, onClose, isLoading, projectId, setProjectId, genAiApiKey, setGenAiApiKey, ttsApiKey, setTtsApiKey, vertexAccessToken, setVertexAccessToken, fillDefaultCredentials }) => {
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Manage Credentials">
             <div className="space-y-4">
                 <InputGroup
                     id="project_id_input_modal" label="Google Cloud Project ID (Legacy for Vertex AI)" value={projectId} onChange={(e) => setProjectId(e.target.value)}
                     placeholder="e.g., PROJECT_ID-..."
+                    disabled={isLoading}
+                />
+                <InputGroup
+                    id="genai_api_key_input_modal" label="Gemini API Key (for Script Generation)" value={genAiApiKey} onChange={(e) => setGenAiApiKey(e.target.value)}
+                    placeholder="Your Google Gemini API Key..."
                     disabled={isLoading}
                 />
                 <InputGroup
@@ -341,15 +355,18 @@ const ScriptEditorModal: React.FC<{
     setIsInteractiveMode: (mode: boolean) => void;
     generatedScript: string;
     setGeneratedScript: (script: string) => void;
-    handleScriptGenerationFunction: (prompt: string, modelId: string) => Promise<string>;
+    handleScriptGenerationFunction: (prompt: string, modelId: string, apiKey: string, vertexAccessToken?: string, projectId?: string) => Promise<string>;
     scriptLanguageOptions: { value: string; label: string }[];
+    genAiApiKey: string;
+    vertexAccessToken: string;
+    projectId: string;
 }> = ({
     isOpen, onClose, isLoading, scriptPrompt, setScriptPrompt,
     modelId, setModelId, videoLength, setVideoLength, scriptLanguage, setScriptLanguage,
     scriptCategory, setScriptCategory,
     dialoguePace, setDialoguePace,
     fullPrompt, setFullPrompt, isInteractiveMode, setIsInteractiveMode, generatedScript, setGeneratedScript,
-    handleScriptGenerationFunction, scriptLanguageOptions
+    handleScriptGenerationFunction, scriptLanguageOptions, genAiApiKey, vertexAccessToken, projectId
 }) => {
 
         const handleInternalScriptGeneration = async () => {
@@ -357,10 +374,19 @@ const ScriptEditorModal: React.FC<{
                 alert("Please enter a Script Topic to generate a script.");
                 return;
             }
+            if (!genAiApiKey && (!vertexAccessToken || !projectId)) {
+                alert("Missing credentials! Please click 'Manage Credentials' to set up your API keys.");
+                return;
+            }
             try {
                 // No explicit status message here, as modal shouldn't control global app status
                 // The main app's isLoading will cover this visually.
-                const script = await handleScriptGenerationFunction(fullPrompt, modelId);
+                console.log('Modal: Calling handleScriptGenerationFunction with credentials:', {
+                    genAiApiKey: genAiApiKey ? 'SET' : 'MISSING',
+                    vertexAccessToken: vertexAccessToken ? 'SET' : 'MISSING',
+                    projectId: projectId ? 'SET' : 'MISSING'
+                });
+                const script = await handleScriptGenerationFunction(fullPrompt, modelId, genAiApiKey, vertexAccessToken, projectId);
                 setGeneratedScript(script);
             } catch (error: any) {
                 console.error("Script generation failed in modal:", error);
@@ -500,6 +526,7 @@ const App: React.FC = () => {
 
     // State for credentials and main inputs
     const [projectId, setProjectId] = useState<string>('');
+    const [genAiApiKey, setGenAiApiKey] = useState<string>('');
     const [ttsApiKey, setTtsApiKey] = useState<string>('');
     const [vertexAccessToken, setVertexAccessToken] = useState<string>('');
     const [scriptPrompt, setScriptPrompt] = useState<string>('');
@@ -557,41 +584,55 @@ const App: React.FC = () => {
     const audioDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
     const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
+    // --- LocalStorage Management for Credentials ---
+
+    // Load credentials from localStorage on component mount
+    useEffect(() => {
+        try {
+            const savedCredentials = localStorage.getItem('gemini_dialogue_credentials');
+            if (savedCredentials) {
+                const creds = JSON.parse(savedCredentials);
+                if (creds.projectId) setProjectId(creds.projectId);
+                if (creds.genAiApiKey) setGenAiApiKey(creds.genAiApiKey);
+                if (creds.ttsApiKey) setTtsApiKey(creds.ttsApiKey);
+                if (creds.vertexAccessToken) setVertexAccessToken(creds.vertexAccessToken);
+                console.log('✓ Credentials loaded from localStorage');
+            }
+        } catch (error) {
+            console.error('Failed to load credentials from localStorage:', error);
+        }
+    }, []);
+
+    // Save credentials to localStorage whenever they change
+    useEffect(() => {
+        try {
+            const credentialsToSave = {
+                projectId,
+                genAiApiKey,
+                ttsApiKey,
+                vertexAccessToken
+            };
+            localStorage.setItem('gemini_dialogue_credentials', JSON.stringify(credentialsToSave));
+            console.log('✓ Credentials saved to localStorage:', { projectId: projectId ? 'SET' : 'EMPTY', genAiApiKey: genAiApiKey ? 'SET' : 'EMPTY', ttsApiKey: ttsApiKey ? 'SET' : 'EMPTY', vertexAccessToken: vertexAccessToken ? 'SET' : 'EMPTY' });
+        } catch (error) {
+            console.error('Failed to save credentials to localStorage:', error);
+        }
+    }, [projectId, genAiApiKey, ttsApiKey, vertexAccessToken]);
+
     // --- Utility Functions ---
 
-    const fetchJsonOrThrow = useCallback(async (url: string, contextLabel: string) => {
-        const response = await fetch(url, { headers: { 'Accept': 'application/vnd.github+json' } });
-        if (!response.ok) {
-            throw new Error(`${contextLabel} request failed (${response.status})`);
-        }
-        return response.json();
-    }, []);
-
-    const extractNumericSuffix = useCallback((value: string, prefix: string) => {
-        const numericPart = value.replace(prefix, '').replace(/\.mp4$/i, '').replace(/\D/g, '');
-        const parsed = parseInt(numericPart, 10);
-        return Number.isNaN(parsed) ? 0 : parsed;
-    }, []);
-
-    const buildVideoLibrary = useCallback((videoItems: any[], prefix: 'man' | 'woman', imageMap: { [key: string]: string }) => {
+    const buildVideoLibrary = useCallback((prefix: 'man' | 'woman', assetsList: Array<{ number: number; name: string }>) => {
         const names = prefix === 'man' ? manNames : womanNames;
-        return videoItems
-            .filter(item => item.name && item.name.startsWith(prefix) && item.download_url)
-            .sort((a, b) => {
-                const suffixA = extractNumericSuffix(a.name, prefix);
-                const suffixB = extractNumericSuffix(b.name, prefix);
-                return suffixA - suffixB;
-            })
-            .map((item, index) => {
-                const baseName = item.name.replace(/\.mp4$/i, '');
-                const label = names[index] || `${prefix === 'man' ? 'Man' : 'Woman'} ${index + 1}`;
+        return assetsList
+            .map((asset, index) => {
+                const label = names[index] || `${prefix === 'man' ? 'Man' : 'Woman'} ${asset.number}`;
                 return {
                     label: label,
-                    videoUrl: item.download_url,
-                    thumbnail: imageMap[baseName] || null
+                    videoUrl: `${LOCAL_VIDEO_ASSETS_PATH}/${asset.name}.mp4`,
+                    thumbnail: `${LOCAL_IMAGE_ASSETS_PATH}/${asset.name}.jpg`
                 };
             });
-    }, [extractNumericSuffix]);
+    }, []);
 
     // --- Handlers for UI state updates (moved or adjusted for modals) ---
 
@@ -726,7 +767,8 @@ Do not include any scene directions, sound effects, or parentheticals (like *lau
 
     const fillDefaultCredentials = useCallback(() => {
         setProjectId('Get_PROJECT_ID');
-        setTtsApiKey('Get_API_KEY');
+        setGenAiApiKey('Get_GEMINI_API_KEY');
+        setTtsApiKey('Get_TTS_API_KEY');
         setVertexAccessToken('Get_ACCESS_TOKEN'); // Keeping this as a legacy input for Vertex AI usage beyond GenAI SDK.
     }, []);
 
@@ -852,18 +894,9 @@ Do not include any scene directions, sound effects, or parentheticals (like *lau
 
     const initializeVideoLibrary = useCallback(async () => {
         try {
-            const [videoItems, imageItems] = await Promise.all([
-                fetchJsonOrThrow(`${GITHUB_CONTENTS_BASE}/video-assets?ref=${GITHUB_BRANCH}`, 'video assets'),
-                fetchJsonOrThrow(`${GITHUB_CONTENTS_BASE}/image-assets?ref=${GITHUB_BRANCH}`, 'image assets')
-            ]);
-            const imageMap = imageItems.reduce((acc: { [key: string]: string }, file: any) => {
-                const key = file.name ? file.name.replace(/\.[^/.]+$/, '') : '';
-                if (key) acc[key] = file.download_url;
-                return acc;
-            }, {});
-
-            const manAssets = buildVideoLibrary(videoItems, 'man', imageMap);
-            const womanAssets = buildVideoLibrary(videoItems, 'woman', imageMap);
+            // Build video assets from local files
+            const manAssets = buildVideoLibrary('man', LOCAL_ASSETS.man);
+            const womanAssets = buildVideoLibrary('woman', LOCAL_ASSETS.woman);
 
             setManVideoAssets(manAssets);
             setWomanVideoAssets(womanAssets);
@@ -886,32 +919,96 @@ Do not include any scene directions, sound effects, or parentheticals (like *lau
             setManVideoAssets([]);
             setWomanVideoAssets([]);
         }
-    }, [fetchJsonOrThrow, buildVideoLibrary, handleVideoLibrarySelection]);
+    }, [buildVideoLibrary, handleVideoLibrarySelection]);
 
-    const handleScriptGeneration = useCallback(async (prompt: string, modelId: string) => {
-        // Initialize GoogleGenAI with process.env.API_KEY as per guidelines
-        // The `tokenInput` and `projectIdInput` are NOT used for this as they are for Vertex AI direct calls.
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const geminiModel = modelId; // The model ID from state
+    const handleScriptGeneration = useCallback(async (prompt: string, modelId: string, apiKey: string, vertexAccessToken?: string, projectId?: string) => {
+        // Log what credentials we received
+        console.log('handleScriptGeneration called with:', {
+            apiKey: apiKey ? `SET (${apiKey.substring(0, 10)}...)` : 'MISSING',
+            vertexAccessToken: vertexAccessToken ? 'SET' : 'MISSING',
+            projectId: projectId ? projectId : 'MISSING',
+            modelId: modelId
+        });
+
+        // Try Gemini API first
+        if (apiKey) {
+            try {
+                console.log('Attempting Gemini API with model:', modelId);
+                const ai = new GoogleGenAI({ apiKey });
+                const response = await ai.models.generateContent({
+                    model: modelId,
+                    contents: [{ role: "user", parts: [{ text: prompt }] }],
+                });
+
+                const script = response.text?.trim();
+                if (script) {
+                    console.log('✓ Gemini API succeeded');
+                    return script;
+                }
+            } catch (geminiError: any) {
+                console.log("⚠ Gemini API failed, attempting Vertex AI fallback...", geminiError.message);
+                // If Gemini fails, try Vertex AI if credentials available
+                if (vertexAccessToken && projectId) {
+                    try {
+                        console.log('Attempting Vertex AI fallback...');
+                        return await handleVertexAIGeneration(prompt, modelId, vertexAccessToken, projectId);
+                    } catch (vertexError: any) {
+                        throw new Error(`Both Gemini and Vertex AI failed. Gemini: ${geminiError.message}. Vertex: ${vertexError.message}`);
+                    }
+                } else {
+                    throw geminiError;
+                }
+            }
+        }
+
+        // If no Gemini API key, try Vertex AI directly
+        if (vertexAccessToken && projectId) {
+            console.log('Attempting Vertex AI directly (no Gemini key)...');
+            return await handleVertexAIGeneration(prompt, modelId, vertexAccessToken, projectId);
+        }
+
+        const errorMsg = "No valid API credentials provided. Please set either a Gemini API Key or Vertex AI credentials (Access Token + Project ID) in the Manage Credentials modal.";
+        console.error('❌ ' + errorMsg, {
+            apiKey: apiKey ? 'SET' : 'MISSING',
+            vertexAccessToken: vertexAccessToken ? 'SET' : 'MISSING',
+            projectId: projectId ? 'SET' : 'MISSING'
+        });
+        throw new Error(errorMsg);
+    }, []);
+
+    const handleVertexAIGeneration = useCallback(async (prompt: string, modelId: string, accessToken: string, projectId: string): Promise<string> => {
+        const endpoint = `https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${LOCATION}/publishers/google/models/${modelId}:generateContent`;
 
         try {
-            // setStatusMessage('Generating AI script...'); // This status message will be handled by the main app
-            const response = await ai.models.generateContent({
-                model: geminiModel,
-                contents: [{ role: "user", parts: [{ text: prompt }] }],
+            console.log('Calling Vertex AI endpoint:', endpoint);
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        role: 'user',
+                        parts: [{ text: prompt }]
+                    }]
+                })
             });
 
-            const script = response.text?.trim();
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Vertex AI API error: ${response.status} - ${JSON.stringify(errorData)}`);
+            }
+
+            const data = await response.json();
+            const script = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
             if (!script) {
-                throw new Error("AI Script Generation returned no content. The model may be unavailable.");
+                throw new Error("Vertex AI returned no content. The model may be unavailable.");
             }
             return script;
         } catch (error: any) {
-            if (error.message.includes("403") || error.message.includes("API key")) {
-                throw new Error("AI Script Generation failed. Please check your API key and ensure it has access to the Gemini API. Error: " + error.message);
-            }
-            throw new Error(`AI Script Generation failed: ${error.message}`);
+            throw new Error(`Vertex AI Script Generation failed: ${error.message}`);
         }
     }, []);
 
@@ -1367,8 +1464,27 @@ Do not include any scene directions, sound effects, or parentheticals (like *lau
             });
 
 
+            if (!genAiApiKey && (!vertexAccessToken || !projectId)) {
+                const missingCredentials = [];
+                if (!genAiApiKey) missingCredentials.push('Gemini API Key');
+                if (!vertexAccessToken) missingCredentials.push('Vertex AI Access Token');
+                if (!projectId) missingCredentials.push('Project ID');
+
+                const errorMsg = `Missing credentials: ${missingCredentials.join(', ')}.\n\nClick "Manage Credentials" button and enter either:\n1. Your Gemini API Key (from https://aistudio.google.com/app/apikey)\nOR\n2. Both Vertex AI Access Token (from: gcloud auth print-access-token) AND Project ID`;
+
+                console.error('CREDENTIALS CHECK FAILED:', {
+                    genAiApiKey: genAiApiKey ? 'SET' : 'MISSING',
+                    vertexAccessToken: vertexAccessToken ? 'SET' : 'MISSING',
+                    projectId: projectId ? 'SET' : 'MISSING'
+                });
+
+                alert(errorMsg);
+                commonGenerationTeardown(new Error("No valid API credentials set"));
+                return;
+            }
+
             setStatusMessage('Generating AI script...');
-            const script = await handleScriptGeneration(fullPrompt, modelId);
+            const script = await handleScriptGeneration(fullPrompt, modelId, genAiApiKey, vertexAccessToken, projectId);
             setGeneratedScript(script); // Update generated script even if not in interactive mode
 
             const dialogueLines = script.split('\n')
@@ -1596,7 +1712,7 @@ Do not include any scene directions, sound effects, or parentheticals (like *lau
                                 disabled={isLoading || womanVideoAssets.length === 0}
                             />
                         </div>
-                        <p className="text-xs text-gray-500 mt-3">These clips are loaded directly from the <span className="font-semibold">AI-Gen-Video-Generator</span> GitHub repository.</p>
+                        <p className="text-xs text-gray-500 mt-3">These clips are loaded from <span className="font-semibold">local video assets</span>.</p>
 
                         <div className="mt-6 space-y-4">
                             <div>
@@ -1809,13 +1925,13 @@ Do not include any scene directions, sound effects, or parentheticals (like *lau
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 sm:px-6 lg:px-8">
                     {/* Video 1: Reference Counting */}
                     <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100">
-                        <div className="aspect-w-16 aspect-h-9 w-full">
+                        <div className="aspect-video w-full">
                             <iframe
                                 src="https://www.youtube.com/embed/2yohlzVw1bA"
                                 title="Reference Counting"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
-                                className="w-full h-full object-cover"
+                                className="w-full h-full"
                             ></iframe>
                         </div>
                         <div className="p-6">
@@ -1828,13 +1944,13 @@ Do not include any scene directions, sound effects, or parentheticals (like *lau
 
                     {/* Video 2: Late Binding */}
                     <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100">
-                        <div className="aspect-w-16 aspect-h-9 w-full">
+                        <div className="aspect-video w-full">
                             <iframe
                                 src="https://www.youtube.com/embed/0_gOqNwYLBY"
                                 title="Late Binding"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
-                                className="w-full h-full object-cover"
+                                className="w-full h-full"
                             ></iframe>
                         </div>
                         <div className="p-6">
@@ -1891,6 +2007,7 @@ Do not include any scene directions, sound effects, or parentheticals (like *lau
                 onClose={() => setShowCredentialsModal(false)}
                 isLoading={isLoading}
                 projectId={projectId} setProjectId={setProjectId}
+                genAiApiKey={genAiApiKey} setGenAiApiKey={setGenAiApiKey}
                 ttsApiKey={ttsApiKey} setTtsApiKey={setTtsApiKey}
                 vertexAccessToken={vertexAccessToken} setVertexAccessToken={setVertexAccessToken}
                 fillDefaultCredentials={fillDefaultCredentials}
@@ -1911,6 +2028,9 @@ Do not include any scene directions, sound effects, or parentheticals (like *lau
                 generatedScript={generatedScript} setGeneratedScript={setGeneratedScript}
                 handleScriptGenerationFunction={handleScriptGeneration}
                 scriptLanguageOptions={scriptLanguageOptions}
+                genAiApiKey={genAiApiKey}
+                vertexAccessToken={vertexAccessToken}
+                projectId={projectId}
             />
         </div>
     );
