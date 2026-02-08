@@ -116,13 +116,17 @@ This project is open-source. Please check the LICENSE file for details.
 Check out these demo videos to see the Gemini 3 Dialogue Director in action:
 
 [![Demo 1](https://img.youtube.com/vi/2yohlzVw1bA/0.jpg)](https://youtu.be/2yohlzVw1bA)
+
 *Demo 1: Comprehensive Walkthrough*
 
 [![Demo 2](https://img.youtube.com/vi/0_gOqNwYLBY/0.jpg)](https://youtu.be/0_gOqNwYLBY)
+
 *Demo 2: Interactive Script editing*
 
 [![Demo 3](https://img.youtube.com/vi/SnrnGrk3Zcg/0.jpg)](https://youtu.be/SnrnGrk3Zcg)
+
 *Demo 3: Custom Actor Uploads*
 
 [![Demo 4](https://img.youtube.com/vi/nHNRGXszywE/0.jpg)](https://youtu.be/nHNRGXszywE)
+
 *Demo 4: Advanced Features*
