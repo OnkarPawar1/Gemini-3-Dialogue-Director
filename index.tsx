@@ -352,139 +352,139 @@ const ScriptEditorModal: React.FC<{
     handleScriptGenerationFunction, scriptLanguageOptions
 }) => {
 
-    const handleInternalScriptGeneration = async () => {
-        if (!scriptPrompt) {
-            alert("Please enter a Script Topic to generate a script.");
-            return;
-        }
-        try {
-            // No explicit status message here, as modal shouldn't control global app status
-            // The main app's isLoading will cover this visually.
-            const script = await handleScriptGenerationFunction(fullPrompt, modelId);
-            setGeneratedScript(script);
-        } catch (error: any) {
-            console.error("Script generation failed in modal:", error);
-            alert(`Script generation failed: ${error.message}`); // Provide alert to user
-        }
-    };
+        const handleInternalScriptGeneration = async () => {
+            if (!scriptPrompt) {
+                alert("Please enter a Script Topic to generate a script.");
+                return;
+            }
+            try {
+                // No explicit status message here, as modal shouldn't control global app status
+                // The main app's isLoading will cover this visually.
+                const script = await handleScriptGenerationFunction(fullPrompt, modelId);
+                setGeneratedScript(script);
+            } catch (error: any) {
+                console.error("Script generation failed in modal:", error);
+                alert(`Script generation failed: ${error.message}`); // Provide alert to user
+            }
+        };
 
-    return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Script Editor & AI Prompt">
-            <div className="space-y-4">
-                <SelectGroup
-                    id="model_select_modal" label="AI Model for Script" value={modelId} onChange={(e) => setModelId(e.target.value)}
-                    options={[
-                        { optgroup: "Gemini 3", value: "gemini-3-flash-preview", label: "Gemini 3 Flash (Preview)" },
-                        { optgroup: "Gemini 3", value: "gemini-3-pro-preview", label: "Gemini 3 Pro (Preview)" },
-                        { optgroup: "Gemini 2.5", value: "gemini-2.5-pro", label: "Gemini 2.5 Pro" },
-                        { optgroup: "Gemini 2.5", value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
-                        { optgroup: "Gemini 2.5", value: "gemini-2.5-flash-lite-preview-06-17", label: "Gemini 2.5 Flash-Lite (Preview)" },
-                        { optgroup: "Gemini 2.0", value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" },
-                        { optgroup: "Gemini 2.0", value: "gemini-2.0-flash-lite", label: "Gemini 2.0 Flash-Lite" },
-                    ]}
-                    disabled={isLoading}
-                />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        return (
+            <Modal isOpen={isOpen} onClose={onClose} title="Script Editor & AI Prompt">
+                <div className="space-y-4">
                     <SelectGroup
-                        id="script_category_select_modal" label="Script Category" value={scriptCategory} onChange={(e) => setScriptCategory(e.target.value)}
+                        id="model_select_modal" label="AI Model for Script" value={modelId} onChange={(e) => setModelId(e.target.value)}
                         options={[
-                            { value: "General", label: "General Conversation" },
-                            { value: "Educational", label: "Educational / Learning" },
-                            { value: "Podcast", label: "Podcast / Talk Show" },
-                            { value: "Interview", label: "Job Interview" },
-                            { value: "Debate", label: "Debate / Argument" },
-                            { value: "Storytelling", label: "Storytelling" },
+                            { optgroup: "Gemini 3", value: "gemini-3-flash-preview", label: "Gemini 3 Flash (Preview)" },
+                            { optgroup: "Gemini 3", value: "gemini-3-pro-preview", label: "Gemini 3 Pro (Preview)" },
+                            { optgroup: "Gemini 2.5", value: "gemini-2.5-pro", label: "Gemini 2.5 Pro" },
+                            { optgroup: "Gemini 2.5", value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+                            { optgroup: "Gemini 2.5", value: "gemini-2.5-flash-lite-preview-06-17", label: "Gemini 2.5 Flash-Lite (Preview)" },
+                            { optgroup: "Gemini 2.0", value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" },
+                            { optgroup: "Gemini 2.0", value: "gemini-2.0-flash-lite", label: "Gemini 2.0 Flash-Lite" },
                         ]}
                         disabled={isLoading}
                     />
-                     <SelectGroup
-                        id="script_language_select_modal" label="Script Language" value={scriptLanguage} onChange={(e) => setScriptLanguage(e.target.value)}
-                        options={scriptLanguageOptions}
-                        disabled={isLoading}
-                    />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <SelectGroup
-                        id="video_length_select_modal" label="Video Length" value={videoLength} onChange={(e) => setVideoLength(e.target.value)}
-                        options={[
-                            { value: "2-6", label: "Snippet (2-6 lines)" },
-                            { value: "7-15", label: "Concise (7-15 lines)" },
-                            { value: "16-25", label: "Brief (16-25 lines)" },
-                            { value: "26-40", label: "Standard (26-40 lines)" },
-                            { value: "41-70", label: "Expanded (41-70 lines)" },
-                            { value: "71-110", label: "Detailed (71-110 lines)" },
-                            { value: "111-150", label: "Comprehensive (111-150 lines)" },
-                            { value: "151-179", label: "Extensive (151-179 lines)" },
-                            { value: "180-190", label: "Long (180-190 lines)" },
-                            { value: "191-250", label: "Deep Dive (191-250 lines)" },
-                        ]}
-                        disabled={isLoading}
-                    />
-                     <SelectGroup
-                        id="dialogue_pace_select_modal" label="Dialogue Pace / Turn Length" value={dialoguePace} onChange={(e) => setDialoguePace(e.target.value)}
-                        options={[
-                            { value: "Quick", label: "Quick / Snappy (Short turns)" },
-                            { value: "Balanced", label: "Natural / Balanced" },
-                            { value: "Detailed", label: "Detailed / Explanatory (Longer turns)" },
-                        ]}
-                        disabled={isLoading}
-                    />
-                </div>
-                <div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <SelectGroup
+                            id="script_category_select_modal" label="Script Category" value={scriptCategory} onChange={(e) => setScriptCategory(e.target.value)}
+                            options={[
+                                { value: "General", label: "General Conversation" },
+                                { value: "Educational", label: "Educational / Learning" },
+                                { value: "Podcast", label: "Podcast / Talk Show" },
+                                { value: "Interview", label: "Job Interview" },
+                                { value: "Debate", label: "Debate / Argument" },
+                                { value: "Storytelling", label: "Storytelling" },
+                            ]}
+                            disabled={isLoading}
+                        />
+                        <SelectGroup
+                            id="script_language_select_modal" label="Script Language" value={scriptLanguage} onChange={(e) => setScriptLanguage(e.target.value)}
+                            options={scriptLanguageOptions}
+                            disabled={isLoading}
+                        />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <SelectGroup
+                            id="video_length_select_modal" label="Video Length" value={videoLength} onChange={(e) => setVideoLength(e.target.value)}
+                            options={[
+                                { value: "2-6", label: "Snippet (2-6 lines)" },
+                                { value: "7-15", label: "Concise (7-15 lines)" },
+                                { value: "16-25", label: "Brief (16-25 lines)" },
+                                { value: "26-40", label: "Standard (26-40 lines)" },
+                                { value: "41-70", label: "Expanded (41-70 lines)" },
+                                { value: "71-110", label: "Detailed (71-110 lines)" },
+                                { value: "111-150", label: "Comprehensive (111-150 lines)" },
+                                { value: "151-179", label: "Extensive (151-179 lines)" },
+                                { value: "180-190", label: "Long (180-190 lines)" },
+                                { value: "191-250", label: "Deep Dive (191-250 lines)" },
+                            ]}
+                            disabled={isLoading}
+                        />
+                        <SelectGroup
+                            id="dialogue_pace_select_modal" label="Dialogue Pace / Turn Length" value={dialoguePace} onChange={(e) => setDialoguePace(e.target.value)}
+                            options={[
+                                { value: "Quick", label: "Quick / Snappy (Short turns)" },
+                                { value: "Balanced", label: "Natural / Balanced" },
+                                { value: "Detailed", label: "Detailed / Explanatory (Longer turns)" },
+                            ]}
+                            disabled={isLoading}
+                        />
+                    </div>
+                    <div>
+                        <InputGroup
+                            id="script_prompt_input_modal" label="Script Topic" type="textarea" rows={2} value={scriptPrompt} onChange={(e) => setScriptPrompt(e.target.value)}
+                            placeholder="e.g., A brief, friendly argument about whether pineapple belongs on pizza."
+                            disabled={isLoading}
+                        />
+                        <div className="mt-3">
+                            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                                <input
+                                    type="checkbox" id="interactive_mode_toggle_modal"
+                                    checked={isInteractiveMode} onChange={(e) => setIsInteractiveMode(e.target.checked)}
+                                    disabled={isLoading}
+                                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                />
+                                Interactive Script Mode (Edit script before generating)
+                            </label>
+                        </div>
+                    </div>
                     <InputGroup
-                        id="script_prompt_input_modal" label="Script Topic" type="textarea" rows={2} value={scriptPrompt} onChange={(e) => setScriptPrompt(e.target.value)}
-                        placeholder="e.g., A brief, friendly argument about whether pineapple belongs on pizza."
+                        id="full_prompt_input_modal" label="Full AI Prompt (Editable)" type="textarea" rows={6} value={fullPrompt} onChange={(e) => setFullPrompt(e.target.value)}
                         disabled={isLoading}
+                        className="bg-gray-50"
                     />
-                    <div className="mt-3">
-                        <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-                            <input
-                                type="checkbox" id="interactive_mode_toggle_modal"
-                                checked={isInteractiveMode} onChange={(e) => setIsInteractiveMode(e.target.checked)}
-                                disabled={isLoading}
-                                className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                            />
-                            Interactive Script Mode (Edit script before generating)
-                        </label>
-                    </div>
-                </div>
-                <InputGroup
-                    id="full_prompt_input_modal" label="Full AI Prompt (Editable)" type="textarea" rows={6} value={fullPrompt} onChange={(e) => setFullPrompt(e.target.value)}
-                    disabled={isLoading}
-                    className="bg-gray-50"
-                />
 
-                <div className="flex justify-between items-center pt-2">
-                    <button
-                        onClick={handleInternalScriptGeneration}
-                        disabled={isLoading || !scriptPrompt}
-                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        aria-label="Generate script preview"
-                    >
-                        {isLoading ? 'Generating Script...' : 'Generate Script (Preview)'}
-                    </button>
-                    {/* Changed button text to "Save & Close" */}
-                    <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300" disabled={isLoading}>Save & Close</button>
-                </div>
-
-                {generatedScript && (
-                    <div className="w-full p-4 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg">
-                        <h4 className="text-md font-semibold text-gray-800 mb-2">Generated Script Preview</h4>
-                        <textarea
-                            id="script_text_area_modal"
-                            rows={8}
-                            className="w-full text-sm text-gray-700 whitespace-pre-wrap font-sans bg-white p-3 rounded-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 resize-y"
-                            value={generatedScript}
-                            onChange={(e) => setGeneratedScript(e.target.value)}
-                            readOnly={!isInteractiveMode}
-                            aria-label="Generated script editor"
-                        ></textarea>
+                    <div className="flex justify-between items-center pt-2">
+                        <button
+                            onClick={handleInternalScriptGeneration}
+                            disabled={isLoading || !scriptPrompt}
+                            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            aria-label="Generate script preview"
+                        >
+                            {isLoading ? 'Generating Script...' : 'Generate Script (Preview)'}
+                        </button>
+                        {/* Changed button text to "Save & Close" */}
+                        <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300" disabled={isLoading}>Save & Close</button>
                     </div>
-                )}
-            </div>
-        </Modal>
-    );
-};
+
+                    {generatedScript && (
+                        <div className="w-full p-4 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg">
+                            <h4 className="text-md font-semibold text-gray-800 mb-2">Generated Script Preview</h4>
+                            <textarea
+                                id="script_text_area_modal"
+                                rows={8}
+                                className="w-full text-sm text-gray-700 whitespace-pre-wrap font-sans bg-white p-3 rounded-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 resize-y"
+                                value={generatedScript}
+                                onChange={(e) => setGeneratedScript(e.target.value)}
+                                readOnly={!isInteractiveMode}
+                                aria-label="Generated script editor"
+                            ></textarea>
+                        </div>
+                    )}
+                </div>
+            </Modal>
+        );
+    };
 
 
 const App: React.FC = () => {
@@ -1536,7 +1536,7 @@ Do not include any scene directions, sound effects, or parentheticals (like *lau
                         <div className="text-gray-400 px-4 text-center z-10">Upload both videos and open the Script Editor to begin.</div>
                     )}
                     {errorMessage && !isLoading && (
-                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900 bg-opacity-75 z-20 p-4">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900 bg-opacity-75 z-20 p-4">
                             <p className="text-red-100 text-lg font-semibold mb-2">Generation Failed!</p>
                             <p className="text-red-200 text-sm text-center max-w-md">{errorMessage}</p>
                         </div>
@@ -1799,57 +1799,88 @@ Do not include any scene directions, sound effects, or parentheticals (like *lau
                 )}
             </div>
 
-            {/* Demos Section */}
-            <div className="pt-8 border-t-2 border-gray-200">
-                <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">See It In Action</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-md">
-                            <iframe 
-                                src="https://www.youtube.com/embed/2yohlzVw1bA" 
-                                title="Comprehensive Walkthrough"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            {/* Demo Showcase Section */}
+            <div className="pt-12 border-t-2 border-gray-200">
+                <div className="text-center mb-10">
+                    <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">Demo Showcase</h2>
+                    <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-500">Core Concept Walkthroughs</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 sm:px-6 lg:px-8">
+                    {/* Video 1: Reference Counting */}
+                    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100">
+                        <div className="aspect-w-16 aspect-h-9 w-full">
+                            <iframe
+                                src="https://www.youtube.com/embed/2yohlzVw1bA"
+                                title="Reference Counting"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
-                                className="w-full h-full"
+                                className="w-full h-full object-cover"
                             ></iframe>
                         </div>
-                        <p className="text-sm text-center text-gray-600 font-medium">Comprehensive Walkthrough</p>
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold text-indigo-900 mb-2">Reference Counting</h3>
+                            <p className="text-gray-600 leading-relaxed">
+                                Understand how Python tracks memory references and deallocates objects immediately when they are no longer needed.
+                            </p>
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-md">
-                            <iframe 
-                                src="https://www.youtube.com/embed/0_gOqNwYLBY" 
-                                title="Interactive Script Editing"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+
+                    {/* Video 2: Late Binding */}
+                    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100">
+                        <div className="aspect-w-16 aspect-h-9 w-full">
+                            <iframe
+                                src="https://www.youtube.com/embed/0_gOqNwYLBY"
+                                title="Late Binding"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
-                                className="w-full h-full"
+                                className="w-full h-full object-cover"
                             ></iframe>
                         </div>
-                        <p className="text-sm text-center text-gray-600 font-medium">Interactive Script Editing</p>
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold text-indigo-900 mb-2">Late Binding</h3>
+                            <p className="text-gray-600 leading-relaxed">
+                                Explore why closure variables resolve at execution time and how to avoid the common "loop-lambda" pitfall.
+                            </p>
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-md">
-                            <iframe 
-                                src="https://www.youtube.com/embed/SnrnGrk3Zcg" 
-                                title="Custom Actor Uploads"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+
+                    {/* Video 3: Garbage Collection */}
+                    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100">
+                        <div className="aspect-w-16 aspect-h-9 w-full">
+                            <iframe
+                                src="https://www.youtube.com/embed/SnrnGrk3Zcg"
+                                title="Garbage Collection"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
-                                className="w-full h-full"
+                                className="w-full h-full object-cover"
                             ></iframe>
                         </div>
-                        <p className="text-sm text-center text-gray-600 font-medium">Custom Actor Uploads</p>
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold text-indigo-900 mb-2">Garbage Collection</h3>
+                            <p className="text-gray-600 leading-relaxed">
+                                Deep dive into CPython's cyclic garbage collector and how it handles objects that reference counting misses.
+                            </p>
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-md">
-                            <iframe 
-                                src="https://www.youtube.com/embed/nHNRGXszywE" 
-                                title="Advanced Features"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+
+                    {/* Video 4: Shallow & Deep Copying */}
+                    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100">
+                        <div className="aspect-w-16 aspect-h-9 w-full">
+                            <iframe
+                                src="https://www.youtube.com/embed/nHNRGXszywE"
+                                title="Shallow & Deep Copying"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
-                                className="w-full h-full"
+                                className="w-full h-full object-cover"
                             ></iframe>
                         </div>
-                        <p className="text-sm text-center text-gray-600 font-medium">Advanced Features</p>
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold text-indigo-900 mb-2">Shallow & Deep Copying</h3>
+                            <p className="text-gray-600 leading-relaxed">
+                                Visualizing the difference between duplicating outer objects versus duplicating nested object hierarchies.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
