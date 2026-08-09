@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "bulk": "node bulk-engine/cli.mjs",
+    "bulk:studio": "node bulk-engine/server.mjs",
+    "bulk:models": "node bulk-engine/cli.mjs --list-models",
+    "bulk:voices": "node bulk-engine/cli.mjs --list-voices"
   },
   "dependencies": {
     "react": "^19.2.4",
